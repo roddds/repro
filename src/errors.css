@@ -1,0 +1,51 @@
+.errors {
+  font-family: monospace;
+}
+.errors,
+td {
+  border-collapse: collapse;
+  border: 1px solid #bbb;
+}
+
+.invalid-cell {
+  position: relative;
+  background-color: white !important;
+  border: 2px solid red !important;
+
+  &:nth-child(2) {
+    border-left: 2px solid red;
+  }
+
+  &[data-error]:hover {
+    overflow: visible;
+  }
+
+  &:hover::after {
+    background-color: red;
+    border-radius: 3px;
+    color: white;
+    content: attr(data-error);
+    font-size: 13px;
+    font-weight: 400;
+    min-width: 160px;
+    padding: 4px 6px 6px;
+    line-height: 1.4;
+    position: absolute;
+    top: -2px;
+    text-align: left;
+    white-space: normal;
+    z-index: 121;
+  }
+
+  &.error-tooltip__left {
+    &:hover::after {
+      right: 100%;
+    }
+  }
+
+  &.error-tooltip__right {
+    &:hover::after {
+      left: 100%;
+    }
+  }
+}
