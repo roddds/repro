@@ -1,10 +1,13 @@
 import * as React from 'react';
-import { HotTable } from '@handsontable/react';
+import { HotTable, HotColumn } from '@handsontable/react';
 import 'handsontable/dist/handsontable.full.min.css';
 import { registerAllModules } from 'handsontable/registry';
+import { registerAllCellTypes } from 'handsontable/cellTypes';
+import { columns, defaultColumnSettings } from './columns';
 import './errors.css';
 
 registerAllModules();
+registerAllCellTypes();
 
 type ErrorType = Array<{ row: number; col: number; errorMessage: string }>;
 
@@ -80,13 +83,57 @@ const SpreadsheetTable = ({
       invalidCellClassName='invalid-cell'
       width='100%'
       height='600px'
-      data={Array.from({ length: 200 }, (_, i) =>
-        Array.from({ length: 9 }, (_, j) => String.fromCharCode(65 + j) + (i + 1))
-      )}
-      colHeaders={['ID', 'Full name', 'Position', 'Country', 'City', 'Address', 'Zip code', 'Mobile', 'E-mail']}
+      data={Array.from({ length: 1000 }, (_, i) => ({ name: `Person ${i}`, email: `person-${i}@example.com` }))}
+      columns={columns}
       rowHeaders={true}
       licenseKey='non-commercial-and-evaluation' // for non-commercial use only
-    />
+      settings={{
+        minRows: 1000,
+        rowHeaders: true,
+        stretchH: 'last',
+        contextMenu: ['clear_column', '---------', 'undo', 'redo', '---------', 'cut', 'copy'],
+        fixedColumnsLeft: 1,
+        hiddenColumns: {
+          columns: [30, 31, 32, 33, 34, 35, 36, 37],
+          copyPasteEnabled: true,
+        },
+        autoColumnSize: false,
+        columnHeaderHeight: 26,
+        height: 'calc(100% - 30px)',
+        manualColumnResize: true,
+        readOnlyCellClassName: 'read-only',
+        rowHeights: 26,
+        selectionMode: 'range',
+        viewportColumnRenderingOffset: 50,
+        viewportRowRenderingOffset: 50,
+        width: '100%',
+      }}
+    >
+      {columns.map((column) => {
+        // @ts-ignore
+        const { type = 'text', align = 'left', ...otherColumnProps } = column;
+
+        let className: string | undefined;
+
+        // @ts-ignore
+        if (column.align === 'right' && column.type === 'text') {
+          className = 'htRight';
+        }
+
+        const columnHeader = otherColumnProps.required ? `* ${otherColumnProps.title}` : otherColumnProps.title;
+        return (
+          <HotColumn
+            className={className}
+            // @ts-ignore
+            {...defaultColumnSettings[type]}
+            {...otherColumnProps}
+            allowEmpty={!otherColumnProps.required}
+            key={otherColumnProps.id}
+            title={columnHeader}
+          />
+        );
+      })}
+    </HotTable>
   );
 };
 
@@ -99,7 +146,7 @@ const Errors = ({ errors, hotRef }: { errors: ErrorType; hotRef: React.RefObject
 
   return (
     <table className='errors' style={{ border: '1px solid red' }}>
-      <thead>
+      {/* <thead>
         <tr>
           <td>cell.visualRow</td>
           <td>cell.visualCol</td>
@@ -110,23 +157,30 @@ const Errors = ({ errors, hotRef }: { errors: ErrorType; hotRef: React.RefObject
           <td>cell.valid</td>
           <td>cell.externalErrorMessage</td>
         </tr>
-      </thead>
-      {errors.map((error) => {
-        const cell = hotInstance.getCellMeta(error.row, error.col);
+      </thead> */}
+      <tbody>
+        {errors.map((error) => {
+          const cell = hotInstance.getCellMeta(error.row, error.col);
 
-        return (
-          <tr style={{ margin: '0' }} key={`${error.row}-${error.col}`}>
-            <td>{cell.visualRow}</td>
-            <td>{cell.visualCol}</td>
-            <td>{cell.row}</td>
-            <td>{cell.col}</td>
-            <td>{cell.prop}</td>
-            <td>{JSON.stringify(cell.hasExternalError)}</td>
-            <td>{JSON.stringify(cell.valid)}</td>
-            <td>{cell.externalErrorMessage}</td>
-          </tr>
-        );
-      })}
+          return (
+            <tr>
+              <td>{JSON.stringify(cell)}</td>
+            </tr>
+          );
+          // return (
+          //   <tr style={{ margin: '0' }} key={`${error.row}-${error.col}`}>
+          //     <td>{cell.visualRow}</td>
+          //     <td>{cell.visualCol}</td>
+          //     <td>{cell.row}</td>
+          //     <td>{cell.col}</td>
+          //     <td>{cell.prop}</td>
+          //     <td>{JSON.stringify(cell.hasExternalError)}</td>
+          //     <td>{JSON.stringify(cell.valid)}</td>
+          //     <td>{cell.externalErrorMessage}</td>
+          //   </tr>
+          // );
+        })}
+      </tbody>
     </table>
   );
 };
@@ -134,7 +188,7 @@ const Errors = ({ errors, hotRef }: { errors: ErrorType; hotRef: React.RefObject
 function App() {
   const [_, setLoaded] = React.useState(false);
   const hotRef = React.useRef<HotTable>(null);
-  const errors = Array.from({ length: 200 }, (_, index) => ({ col: 1, row: index, errorMessage: 'This is wrong' }));
+  const errors = Array.from({ length: 1000 }, (_, index) => ({ col: 1, row: index, errorMessage: 'This is wrong' }));
 
   return (
     <div style={{ display: 'flex' }}>
